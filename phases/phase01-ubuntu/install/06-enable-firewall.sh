@@ -17,8 +17,8 @@ sudo ufw default deny incoming
 sudo ufw default allow outgoing
 
 # --- ESSENTIAL SERVICES ---
-# SSH - Change port if you've moved it from 22!
-sudo ufw allow 22/tcp comment 'SSH'
+# SSH - Change port if you've moved it from 2222!
+sudo ufw allow 2222/tcp comment 'SSH'
 
 # --- ADD YOUR SERVICES BELOW ---
 # Uncomment what you need:
@@ -43,7 +43,7 @@ sudo ufw allow 22/tcp comment 'SSH'
 
 # --- RATE LIMITING ---
 # Protect SSH from brute force
-sudo ufw limit 22/tcp comment 'SSH rate-limited'
+sudo ufw limit 2222/tcp comment 'SSH rate-limited'
 
 # --- LOGGING ---
 sudo ufw logging on
@@ -62,7 +62,7 @@ sudo ufw status numbered
 
 # --- OPTIONAL: Test SSH connectivity ---
 echo -e "\n${GREEN}Testing SSH connection...${NC}"
-if nc -zv localhost 22 2>&1 | grep -q succeeded; then
+if nc -zv localhost 2222 2>&1 | grep -q succeeded; then
     echo -e "${GREEN}✓ SSH is accessible${NC}"
 else
     echo -e "${RED}✗ SSH is NOT accessible - check your rules!${NC}"
