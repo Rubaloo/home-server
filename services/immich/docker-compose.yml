@@ -1,0 +1,12 @@
+services:
+  immich:
+    image: REPLACE_ME
+    container_name: immich
+
+    ports:
+      - "REPLACE_ME"
+
+    volumes:
+      - ./data:/data
+
+    restart: unless-stopped

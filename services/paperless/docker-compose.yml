@@ -1,0 +1,12 @@
+services:
+  paperless:
+    image: REPLACE_ME
+    container_name: paperless
+
+    ports:
+      - "REPLACE_ME"
+
+    volumes:
+      - ./data:/data
+
+    restart: unless-stopped
