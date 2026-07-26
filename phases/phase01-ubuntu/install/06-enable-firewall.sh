@@ -1,5 +1,8 @@
 #!/bin/bash
 # Phase 01 - Step 06
+set -e  # Exit on any error
+
+sudo apt install ufw -y
 
 # Color output for better visibility
 RED='\033[0;31m'

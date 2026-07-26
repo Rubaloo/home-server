@@ -62,6 +62,8 @@
 
 set -e  # Exit on any error
 
+sudo apt install fail2ban -y
+
 # Color codes for pretty output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

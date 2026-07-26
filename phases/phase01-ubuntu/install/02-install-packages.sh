@@ -15,8 +15,6 @@ ca-certificates \
 software-properties-common \
 gnupg \
 apt-transport-https \
-ufw \
-fail2ban \
 avahi-daemon \
 net-tools \
 bash-completion \
