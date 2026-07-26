@@ -1,5 +1,0 @@
-services:
-  grafana:
-    image: REPLACE_ME
-
-    restart: unless-stopped

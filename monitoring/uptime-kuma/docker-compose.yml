@@ -1,5 +1,0 @@
-services:
-  uptime-kuma:
-    image: REPLACE_ME
-
-    restart: unless-stopped
