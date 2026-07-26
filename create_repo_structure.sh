@@ -1,257 +1,195 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-set -euo pipefail
+# Script to create home-server folder structure
+# Usage: ./create-server-structure.sh
 
-echo "Creating project structure..."
+set -e  # Exit on error
 
-# Create all directories
-mkdir -p ./{bootstrap,docker,services/{pihole,plex,immich,paperless,nextcloud},storage,backup,monitoring/{uptime-kuma,grafana,prometheus},scripts}
+# Define colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-#########################################
-# Helper function
-#########################################
+echo -e "${BLUE}Creating home-server folder structure...${NC}"
 
-create_script() {
-    local file="$1"
-    
-    # Create directory if it doesn't exist
-    mkdir -p "$(dirname "$file")"
+# Base directory
+BASE_DIR="."
 
-    cat > "$file" <<EOF
-#!/usr/bin/env bash
+# Create base directory and subdirectories
+mkdir -p "$BASE_DIR"
 
-set -euo pipefail
+# Create main directories
+mkdir -p "$BASE_DIR/config"
+mkdir -p "$BASE_DIR/docs"
+mkdir -p "$BASE_DIR/scripts"
+mkdir -p "$BASE_DIR/assets"
+mkdir -p "$BASE_DIR/generated"
 
-echo "=================================================="
-echo "Executing: \$(basename "\$0")"
-echo
-echo "TODO: Implement this script."
-echo "=================================================="
-EOF
-
-    chmod +x "$file"
-}
-
-#########################################
-# Bootstrap
-#########################################
-
-create_script "./bootstrap/01-system-update.sh"
-create_script "./bootstrap/02-packages.sh"
-create_script "./bootstrap/03-users.sh"
-create_script "./bootstrap/04-ssh.sh"
-
-#########################################
-# Docker
-#########################################
-
-create_script "./docker/install.sh"
-
-cat > "./docker/daemon.json" <<EOF
-{
-    "log-driver": "json-file",
-    "log-opts": {
-        "max-size": "10m",
-        "max-file": "3"
-    }
-}
-EOF
-
-#########################################
-# Services
-#########################################
-
-services=(
-    "pihole"
-    "plex"
-    "immich"
-    "paperless"
-    "nextcloud"
-)
-
-for service in "${services[@]}"; do
-    mkdir -p "./services/$service"
-    
-    create_script "./services/$service/install.sh"
-
-    cat > "./services/$service/docker-compose.yml" <<EOF
-services:
-  ${service}:
-    image: REPLACE_ME
-    container_name: ${service}
-
-    ports:
-      - "REPLACE_ME"
-
-    volumes:
-      - ./data:/data
-
-    restart: unless-stopped
-EOF
-
+# Create phase directories
+for phase in phase01-ubuntu phase02-docker phase03-storage phase04-network \
+              phase05-monitoring phase06-backups phase07-services phase08-maintenance; do
+    mkdir -p "$BASE_DIR/phases/$phase"
 done
 
-#########################################
-# Storage
-#########################################
+# Create phase01-ubuntu subdirectories with all required paths
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/install"
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/validate"
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/backup"
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/rollback"
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/templates"
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/logs"
+mkdir -p "$BASE_DIR/phases/phase01-ubuntu/reports"
 
-create_script "./storage/mount-drives.sh"
-create_script "./storage/mergerfs.sh"
-create_script "./storage/snapraid.sh"
+# Create README.md files
+echo "# Home Server Project" > "$BASE_DIR/README.md"
+echo "# Phase 01 - Ubuntu Setup" > "$BASE_DIR/phases/phase01-ubuntu/README.md"
 
-#########################################
-# Backup
-#########################################
-
-create_script "./backup/backup.sh"
-create_script "./backup/restore.sh"
-
-#########################################
-# Monitoring
-#########################################
-
-for service in "uptime-kuma" "grafana" "prometheus"
-do
-    mkdir -p "./monitoring/$service"
-    
-    create_script "./monitoring/$service/install.sh"
-
-    cat > "./monitoring/$service/docker-compose.yml" <<EOF
-services:
-  ${service}:
-    image: REPLACE_ME
-
-    restart: unless-stopped
+# Create bootstrap script
+cat > "$BASE_DIR/bootstrap.sh" << 'EOF'
+#!/bin/bash
+# Main bootstrap script for home server setup
+echo "Starting home server bootstrap process..."
+# Add your main setup logic here
 EOF
+chmod +x "$BASE_DIR/bootstrap.sh"
 
+# Create config files with sample content
+echo "# Server Configuration" > "$BASE_DIR/config/server.conf"
+echo "# Network Configuration" > "$BASE_DIR/config/network.conf"
+echo "# Users Configuration" > "$BASE_DIR/config/users.conf"
+echo "# Docker Configuration" > "$BASE_DIR/config/docker.conf"
+
+# Create documentation files
+echo "# Architecture Documentation" > "$BASE_DIR/docs/architecture.md"
+echo "# Implementation Phases" > "$BASE_DIR/docs/phases.md"
+echo "# Recovery Procedures" > "$BASE_DIR/docs/recovery.md"
+
+# Create all phase01 install scripts
+for i in {01..16}; do
+    script_name="$BASE_DIR/phases/phase01-ubuntu/install/$i-"
+    case $i in
+        01) script_name+="system-update.sh" ;;
+        02) script_name+="install-packages.sh" ;;
+        03) script_name+="configure-network.sh" ;;
+        04) script_name+="configure-hostname.sh" ;;
+        05) script_name+="configure-timezone.sh" ;;
+        06) script_name+="enable-firewall.sh" ;;
+        07) script_name+="enable-updates.sh" ;;
+        08) script_name+="configure-ssh.sh" ;;
+        09) script_name+="install-fail2ban.sh" ;;
+        10) script_name+="create-directories.sh" ;;
+        11) script_name+="create-aliases.sh" ;;
+        12) script_name+="install-lm-sensors.sh" ;;
+        13) script_name+="configure-logrotate.sh" ;;
+        14) script_name+="enable-timesync.sh" ;;
+        15) script_name+="create-documentation.sh" ;;
+        16) script_name+="create-docker-user.sh" ;;
+    esac
+    echo "#!/bin/bash" > "$script_name"
+    echo "# Phase 01 - Step $i" >> "$script_name"
+    chmod +x "$script_name"
 done
 
-#########################################
-# Helpers
-#########################################
-
-create_script "./scripts/helpers.sh"
-
-#########################################
-# .env
-#########################################
-
-cat > "./.env" <<EOF
-# ===================================================
-# Global environment variables
-# ===================================================
-
-TIMEZONE=Europe/Madrid
-
-PUID=1000
-PGID=1000
-
-DOMAIN=example.local
-
-DOCKER_NETWORK=home-network
+# Create phase01 master script
+cat > "$BASE_DIR/phases/phase01-ubuntu/install/phase01.sh" << 'EOF'
+#!/bin/bash
+# Master script to run all phase01 installation steps
+echo "Running Phase 01 - Ubuntu Setup..."
+for script in [0-9][0-9]-*.sh; do
+    echo "Executing: $script"
+    ./"$script"
+done
+echo "Phase 01 completed!"
 EOF
+chmod +x "$BASE_DIR/phases/phase01-ubuntu/install/phase01.sh"
 
-#########################################
-# install.sh
-#########################################
-
-cat > "./install.sh" <<'EOF'
-#!/usr/bin/env bash
-
-set -euo pipefail
-
-echo
-echo "==============================================="
-echo " Home Server Installation"
-echo "==============================================="
-echo
-
-run() {
-
-    local script="$1"
-
-    if [[ -x "$script" ]]; then
-        "$script"
-    else
-        echo "Skipping $script"
-    fi
-}
-
-echo "Running bootstrap..."
-
-run ./bootstrap/01-system-update.sh
-run ./bootstrap/02-packages.sh
-run ./bootstrap/03-users.sh
-run ./bootstrap/04-ssh.sh
-
-echo
-echo "Installing Docker..."
-
-run ./docker/install.sh
-
-echo
-echo "Storage..."
-
-run ./storage/mount-drives.sh
-run ./storage/mergerfs.sh
-run ./storage/snapraid.sh
-
-echo
-echo "Backup..."
-
-run ./backup/backup.sh
-
-echo
-echo "Installation finished."
+# Create validation scripts
+for script in check-network.sh check-firewall.sh check-services.sh \
+              check-security.sh check-health.sh; do
+    cat > "$BASE_DIR/phases/phase01-ubuntu/validate/$script" << 'EOF'
+#!/bin/bash
+echo "Running validation check..."
+# Add validation logic here
 EOF
+    chmod +x "$BASE_DIR/phases/phase01-ubuntu/validate/$script"
+done
 
-chmod +x "./install.sh"
-
-#########################################
-# README
-#########################################
-
-cat > "./README.md" <<EOF
-# Home Server
-
-This repository contains everything required to deploy my home server.
-
-## Project Structure
-
-\`\`\`
-bootstrap/
-docker/
-services/
-storage/
-backup/
-monitoring/
-scripts/
-\`\`\`
-
-## Installation
-
-\`\`\`bash
-chmod +x install.sh
-./install.sh
-\`\`\`
-
-## Current Status
-
-- [ ] Bootstrap
-- [ ] Docker
-- [ ] Storage
-- [ ] Services
-- [ ] Monitoring
-- [ ] Backup
+# Create validation master script
+cat > "$BASE_DIR/phases/phase01-ubuntu/validate/phase01-validation.sh" << 'EOF'
+#!/bin/bash
+# Master validation script
+echo "Running Phase 01 validation..."
+for script in check-*.sh; do
+    echo "Validating: $script"
+    ./"$script"
+done
+echo "Validation completed!"
 EOF
+chmod +x "$BASE_DIR/phases/phase01-ubuntu/validate/phase01-validation.sh"
 
-echo
-echo "==============================================="
-echo "Project successfully created!"
-echo
-echo "Location:"
-echo "    $(pwd)"
-echo
-echo "Next step:"
-echo "    ./install.sh"
-echo "==============================================="
+# Create backup scripts
+for script in backup-config.sh restore-config.sh backup-netplan.sh; do
+    cat > "$BASE_DIR/phases/phase01-ubuntu/backup/$script" << 'EOF'
+#!/bin/bash
+echo "Running backup/restore operation..."
+# Add backup/restore logic here
+EOF
+    chmod +x "$BASE_DIR/phases/phase01-ubuntu/backup/$script"
+done
+
+# Create rollback scripts
+for script in disable-firewall.sh restore-ssh.sh restore-network.sh; do
+    cat > "$BASE_DIR/phases/phase01-ubuntu/rollback/$script" << 'EOF'
+#!/bin/bash
+echo "Running rollback operation..."
+# Add rollback logic here
+EOF
+    chmod +x "$BASE_DIR/phases/phase01-ubuntu/rollback/$script"
+done
+
+# Create template files with sample content
+echo "# SSHD Configuration Template" > "$BASE_DIR/phases/phase01-ubuntu/templates/sshd_config"
+echo "# Fail2ban Configuration Template" > "$BASE_DIR/phases/phase01-ubuntu/templates/jail.local"
+echo "# Netplan Configuration Template" > "$BASE_DIR/phases/phase01-ubuntu/templates/netplan.yaml"
+echo "# Bash Aliases Template" > "$BASE_DIR/phases/phase01-ubuntu/templates/bash_aliases"
+echo "# Logrotate Configuration Template" > "$BASE_DIR/phases/phase01-ubuntu/templates/logrotate.conf"
+
+# Create main scripts
+for script in healthcheck.sh server-report.sh update-all.sh backup-all.sh restore-all.sh; do
+    cat > "$BASE_DIR/scripts/$script" << 'EOF'
+#!/bin/bash
+echo "Running script..."
+# Add script logic here
+EOF
+    chmod +x "$BASE_DIR/scripts/$script"
+done
+
+# Create .gitkeep files for empty directories
+touch "$BASE_DIR/phases/phase01-ubuntu/logs/.gitkeep"
+touch "$BASE_DIR/phases/phase01-ubuntu/reports/.gitkeep"
+touch "$BASE_DIR/assets/.gitkeep"
+touch "$BASE_DIR/generated/.gitkeep"
+
+# Create README files for other phases
+for phase in phase02-docker phase03-storage phase04-network phase05-monitoring \
+             phase06-backups phase07-services phase08-maintenance; do
+    echo "# Phase ${phase#phase}" > "$BASE_DIR/phases/$phase/README.md"
+done
+
+echo -e "${GREEN}✓ Folder structure created successfully!${NC}"
+echo -e "${BLUE}Structure created in: ${NC}$BASE_DIR/"
+echo -e "${BLUE}Total directories created: ${NC}$(find "$BASE_DIR" -type d | wc -l)"
+echo -e "${BLUE}Total files created: ${NC}$(find "$BASE_DIR" -type f | wc -l)"
+
+# Display tree structure if tree command is available
+if command -v tree &> /dev/null; then
+    echo -e "\n${BLUE}Directory tree:${NC}"
+    tree "$BASE_DIR" -L 3
+else
+    echo -e "\n${BLUE}To view the directory tree, install 'tree' command:${NC}"
+    echo "  sudo apt-get install tree  # Debian/Ubuntu"
+    echo "  sudo yum install tree      # RHEL/CentOS"
+fi
+
+echo -e "${GREEN}Done!${NC}"
