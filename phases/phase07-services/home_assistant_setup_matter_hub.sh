@@ -288,7 +288,7 @@ services:
     restart: unless-stopped
     network_mode: host
     environment:
-      - HAMH_HOME_ASSISTANT_URL=http://${LOCAL_IP}:8123
+      - HAMH_HOME_ASSISTANT_URL=http://localhost:8123
       - HAMH_HOME_ASSISTANT_ACCESS_TOKEN=${HASS_TOKEN}
       - HAMH_LOG_LEVEL=info
       - HAMH_HTTP_PORT=${MATTER_HUB_PORT}
@@ -630,7 +630,7 @@ echo "✅ mDNS Warning Fixed:"
 echo "  - Set mdns-network-interface=${NETWORK_INTERFACE}"
 echo "  - This prevents the warning about Docker-internal interfaces"
 echo ""
-echo "🌐 Network Access:"
+echo "🌐 Network Access:"O
 echo "  - Matter Hub web interface accessible from: ${LOCAL_SUBNET}"
 echo "  - Matter commissioning accessible from: ${LOCAL_SUBNET}"
 echo "  - Test from another device: curl http://${LOCAL_IP}:${MATTER_HUB_PORT}/health"
